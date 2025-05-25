@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Happy Mother's Day</title>
     <style>
         body {
@@ -96,13 +96,19 @@
             transform: translate(-50%, -50%) scale(1) !important;
             visibility: visible !important;
         }
+        .postcard h1 {
+            margin-top: 0;
+            color: #d6336c;
+            text-align: center;
+            font-family: 'Georgia', serif;
+        }
         .postcard p {
             font-family: 'Georgia', serif;
             font-size: 18px;
             line-height: 1.8;
             color: #4a4a4a;
             text-align: center;
-            margin: 0;
+            margin: 20px 0 0 0;
             text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         .close-btn {
@@ -130,7 +136,7 @@
         <h1>Happy Mother's Day 💐</h1>
         <p>
             To the woman whose unconditional love raised me,<br>
-           Whose quiet sacrifices built the path I now walk,<br>
+            Whose quiet sacrifices built the path I now walk,<br>
             Whose kindness is endless, and strength unshakable.<br>
             The first smile I ever saw — yours — Is still the light that guides me.<br>
             Thank you, Mom, for giving life its beauty. 💖
@@ -144,11 +150,11 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        
+
         let w, h, hw, hh;
-        
+
         const opts = {
-            strings: ['HAPPY', 'MOTHER\'S', 'DAY'],
+            strings: ['HAPPY', "MOTHER'S", 'DAY'],
             charSize: 30,
             charSpacing: 35,
             lineHeight: 40,
@@ -181,32 +187,35 @@
             balloonBaseTime: 40,
             balloonAddedTime: 40
         };
-        
+
         const calc = {
             totalWidth: 0,
             totalHeight: 0
         };
-        
+
         const letters = [];
         const fireworks = [];
         const balloons = [];
-        let animationComplete = false;
-        
+
+        const mainHeart = document.getElementById('mainHeart');
+        const postcard = document.getElementById('card');
+        const closeBtn = document.getElementById('closeBtn');
+        const heartsContainer = document.getElementById('hearts');
+
         function Letter(char, x, y) {
             this.char = char;
             this.x = x;
             this.y = y;
             this.dx = -ctx.measureText(char).width / 2;
             this.dy = +opts.charSize / 2;
-            this.fireworkDy = this.y - hh;
-            
+
             const hue = (x / calc.totalWidth) * 360;
             this.color = `hsl(${hue}, 80%, 50%)`;
             this.lightColor = `hsl(${hue}, 80%, 80%)`;
             this.alphaColor = `hsla(${hue}, 80%, 50%, alp)`;
             this.reset();
         }
-        
+
         Letter.prototype.reset = function() {
             this.phase = 'firework';
             this.tick = 0;
@@ -216,7 +225,7 @@
             this.lineWidth = opts.fireworkBaseLineWidth + opts.fireworkAddedLineWidth * Math.random();
             this.prevPoints = [[hw, h]];
         };
-        
+
         Letter.prototype.step = function() {
             if (this.phase === 'firework') {
                 if (!this.spawned) {
@@ -224,302 +233,221 @@
                     if (this.tick >= this.spawningTime) {
                         this.tick = 0;
                         this.spawned = true;
+                        this.points = [];
                     }
                 } else {
-                    ++this.tick;
-                    
-                    const proportion = this.tick / this.reachTime;
-                    const x = hw + (this.x - hw) * proportion;
-                    const y = h + (this.y - h) * proportion;
-                    
-                    this.prevPoints.push([x, y]);
-                    
-                    const lineLength = this.prevPoints.length;
-                    if (lineLength > 20) {
-                        this.prevPoints.shift();
-                    }
-                    
+                    const progress = this.tick / this.reachTime;
+                    const x = hw + (this.x - hw) * progress;
+                    const y = h - (h - this.y) * progress;
+                    this.points.push([x, y]);
                     if (this.tick >= this.reachTime) {
                         this.phase = 'contemplate';
                         this.tick = 0;
-                        this.spawned = false;
-                        this.spawningTime = opts.letterContemplatingWaitTime / letters.length * Math.random() | 0;
-                        
-                        for (let i = 0; i < opts.fireworkBaseShards + opts.fireworkAddedShards * Math.random() | 0; ++i) {
-                            fireworks.push(new Firework(x, y, this.lightColor));
-                        }
+                        this.waitTime = opts.letterContemplatingWaitTime;
                     }
+                    ++this.tick;
                 }
             } else if (this.phase === 'contemplate') {
                 ++this.tick;
-                if (this.tick >= this.spawningTime) {
-                    this.phase = 'letter';
-                    this.tick = 0;
-                    this.spawned = false;
-                    this.spawningTime = (opts.fireworkLetterBaseTime + opts.fireworkLetterAddedTime * Math.random()) | 0;
-                }
-            } else if (this.phase === 'letter') {
-                ++this.tick;
-                if (this.tick >= this.spawningTime) {
-                    this.phase = 'balloon';
-                    this.tick = 0;
-                    this.spawned = false;
-                    this.spawningTime = opts.balloonSpawnTime;
-                }
-            } else if (this.phase === 'balloon') {
-                ++this.tick;
-                if (this.tick >= this.spawningTime) {
-                    this.phase = 'fadeOut';
-                    this.tick = 0;
-                    this.spawned = false;
-                    this.spawningTime = 180; // Time to fade out
-                    balloons.push(new Balloon(this.x, this.y, this.lightColor));
-                }
-            } else if (this.phase === 'fadeOut') {
-                ++this.tick;
-                if (this.tick >= this.spawningTime) {
+                if (this.tick > this.waitTime) {
                     this.phase = 'done';
+                    mainHeart.classList.add('show');
                 }
             }
         };
-        
+
         Letter.prototype.draw = function() {
-            if (this.phase === 'firework') {
-                if (this.spawned) {
-                    ctx.strokeStyle = this.color;
-                    ctx.lineWidth = this.lineWidth;
-                    ctx.lineJoin = 'round';
-                    ctx.lineCap = 'round';
-                    ctx.beginPath();
-                    
-                    const lineLength = this.prevPoints.length;
-                    for (let i = 1; i < lineLength; ++i) {
-                        ctx.globalAlpha = i / lineLength * 0.5;
-                        ctx.moveTo(this.prevPoints[i-1][0], this.prevPoints[i-1][1]);
-                        ctx.lineTo(this.prevPoints[i][0], this.prevPoints[i][1]);
-                    }
-                    ctx.stroke();
-                    ctx.globalAlpha = 1;
+            ctx.save();
+            ctx.font = `${opts.charSize}px Arial`;
+            ctx.fillStyle = this.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            if (this.phase === 'firework' && this.spawned) {
+                for (let i = 0; i < this.points.length; i++) {
+                    const p = this.points[i];
+                    ctx.fillText(this.char, p[0], p[1]);
                 }
-            } else if (this.phase === 'letter') {
-                const proportion = this.tick / this.spawningTime;
-                const size = opts.fireworkLetterBaseSize + opts.fireworkLetterAddedSize * proportion;
-                
-                ctx.fillStyle = this.alphaColor.replace('alp', proportion);
-                ctx.font = size + 'px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(this.char, this.x + this.dx, this.y + this.dy);
-            } else if (this.phase === 'fadeOut') {
-                const proportion = 1 - (this.tick / this.spawningTime);
-                const size = opts.fireworkLetterBaseSize + opts.fireworkLetterAddedSize;
-                
-                ctx.fillStyle = this.alphaColor.replace('alp', proportion);
-                ctx.font = size + 'px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(this.char, this.x + this.dx, this.y + this.dy);
+            } else if (this.phase === 'contemplate' || this.phase === 'done') {
+                ctx.fillText(this.char, this.x, this.y);
             }
+            ctx.restore();
         };
-        
+
         function Firework(x, y, color) {
             this.x = x;
             this.y = y;
-            this.baseX = x;
-            this.baseY = y;
             this.color = color;
-            this.vx = (Math.random() - 0.5) * (opts.fireworkShardBaseVel + opts.fireworkShardAddedVel * Math.random());
-            this.vy = (Math.random() - 0.5) * (opts.fireworkShardBaseVel + opts.fireworkShardAddedVel * Math.random());
-            this.size = opts.fireworkShardBaseSize + opts.fireworkShardAddedSize * Math.random();
-            this.life = 1;
+            this.life = 50;
+            this.particles = [];
+            for (let i = 0; i < 15; i++) {
+                this.particles.push({
+                    x: this.x,
+                    y: this.y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    size: 2 + Math.random() * 2,
+                    alpha: 1,
+                    decay: 0.02 + Math.random() * 0.03,
+                });
+            }
         }
-        
+
         Firework.prototype.step = function() {
-            this.vx *= 0.98;
-            this.vy *= 0.98;
-            this.vy += opts.gravity;
-            this.x += this.vx;
-            this.y += this.vy;
-            this.life -= 0.015;
+            this.life--;
+            this.particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.05; // gravity
+                p.alpha -= p.decay;
+                if (p.alpha < 0) p.alpha = 0;
+            });
         };
-        
+
         Firework.prototype.draw = function() {
-            ctx.fillStyle = this.color.replace('80%', (this.life * 80) + '%');
-            ctx.globalAlpha = this.life;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            this.particles.forEach(p => {
+                ctx.fillStyle = `rgba(255, 182, 193, ${p.alpha})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
         };
-        
-        function Balloon(x, y, color) {
-            this.x = x;
-            this.y = y;
-            this.vx = (Math.random() - 0.5) * (opts.balloonBaseVel + opts.balloonAddedVel * Math.random());
-            this.vy = -(opts.balloonBaseVel + opts.balloonAddedVel * Math.random());
-            this.size = opts.balloonBaseSize + opts.balloonAddedSize * Math.random();
-            this.life = 1;
-            this.color = color;
+
+        function Balloon() {
+            this.x = Math.random() * w;
+            this.y = h + 40;
+            this.size = 15 + Math.random() * 20;
+            this.speed = 0.5 + Math.random() * 0.7;
+            this.color = `hsl(${Math.random() * 360}, 80%, 70%)`;
+            this.life = h / this.speed + 50;
         }
-        
+
         Balloon.prototype.step = function() {
-            this.vy += opts.upFlow;
-            this.x += this.vx;
-            this.y += this.vy;
-            this.life -= 0.01;
+            this.y -= this.speed;
+            this.life--;
         };
-        
+
         Balloon.prototype.draw = function() {
-            ctx.fillStyle = this.color.replace('80%', (this.life * 80) + '%');
-            ctx.globalAlpha = this.life;
+            ctx.save();
+            ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.ellipse(this.x, this.y, this.size * 0.6, this.size, 0, 0, Math.PI * 2);
             ctx.fill();
-            ctx.globalAlpha = 1;
+            ctx.strokeStyle = '#b34766';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y + this.size);
+            ctx.lineTo(this.x, this.y + this.size + 10);
+            ctx.stroke();
+            ctx.restore();
         };
-        
+
+        let animationComplete = false;
+
         function init() {
-            w = canvas.width = window.innerWidth;
-            h = canvas.height = window.innerHeight;
+            w = window.innerWidth;
+            h = window.innerHeight;
             hw = w / 2;
             hh = h / 2;
-            
-            opts.cx = hw;
-            opts.cy = hh;
-            
-            ctx.font = opts.charSize + 'px Arial';
-            
+            canvas.width = w;
+            canvas.height = h;
+
             calc.totalWidth = 0;
-            for (let i = 0; i < opts.strings.length; ++i) {
-                for (let j = 0; j < opts.strings[i].length; ++j) {
-                    calc.totalWidth += ctx.measureText(opts.strings[i][j]).width + opts.charSpacing;
-                }
-                calc.totalWidth -= opts.charSpacing;
-                if (i < opts.strings.length - 1) {
-                    calc.totalWidth = Math.max(calc.totalWidth, 0);
-                }
-            }
-            calc.totalHeight = opts.strings.length * opts.lineHeight;
-            
+            opts.strings.forEach(str => {
+                calc.totalWidth += (str.length - 1) * opts.charSpacing + opts.charSize;
+            });
+
             letters.length = 0;
-            let currentY = opts.cy - calc.totalHeight / 2 + opts.lineHeight / 2;
-            
-            for (let i = 0; i < opts.strings.length; ++i) {
-                const string = opts.strings[i];
-                let currentX = opts.cx - ctx.measureText(string).width / 2;
-                
-                for (let j = 0; j < string.length; ++j) {
-                    letters.push(new Letter(string[j], currentX, currentY));
-                    currentX += ctx.measureText(string[j]).width + opts.charSpacing;
+            let currentX = hw - calc.totalWidth / 2;
+
+            opts.strings.forEach(str => {
+                for (let i = 0; i < str.length; i++) {
+                    let char = str.charAt(i);
+                    letters.push(new Letter(char, currentX + i * opts.charSpacing + opts.charSize / 2, hh));
                 }
-                currentY += opts.lineHeight;
-            }
-        }
-        
-        function step() {
-            letters.forEach(letter => letter.step());
-            
-            fireworks.forEach((firework, index) => {
-                firework.step();
-                if (firework.life <= 0) {
-                    fireworks.splice(index, 1);
-                }
+                currentX += (str.length - 1) * opts.charSpacing + opts.charSize + 20; // 20 for space between words
             });
-            
-            balloons.forEach((balloon, index) => {
-                balloon.step();
-                if (balloon.life <= 0) {
-                    balloons.splice(index, 1);
-                }
-            });
-            
-            // Check if animation is complete
-            const allDone = letters.every(letter => letter.phase === 'done');
-            if (allDone && !animationComplete) {
-                animationComplete = true;
-                setTimeout(() => {
-                    document.getElementById('mainHeart').classList.add('show');
-                }, 1000);
-            }
-        }
-        
-        function draw() {
-            ctx.fillStyle = 'rgba(15, 15, 35, 0.1)';
-            ctx.fillRect(0, 0, w, h);
-            
-            letters.forEach(letter => letter.draw());
-            fireworks.forEach(firework => firework.draw());
-            balloons.forEach(balloon => balloon.draw());
-        }
-        
-        function loop() {
-            step();
-            draw();
-            requestAnimationFrame(loop);
-        }
-        
-        function reset() {
-            letters.forEach(letter => letter.reset());
+
             fireworks.length = 0;
             balloons.length = 0;
             animationComplete = false;
-            document.getElementById('mainHeart').classList.remove('show');
-            document.getElementById('card').classList.remove('show');
+            mainHeart.classList.remove('show');
+            postcard.classList.remove('show');
         }
-        
-        // Add floating hearts
+
+        function step() {
+            ctx.clearRect(0, 0, w, h);
+
+            letters.forEach(letter => letter.step());
+            letters.forEach(letter => letter.draw());
+
+            if (animationComplete) {
+                if (Math.random() < 0.02) {
+                    fireworks.push(new Firework(Math.random() * w, Math.random() * hh, 'pink'));
+                }
+                if (Math.random() < 0.01) {
+                    balloons.push(new Balloon());
+                }
+            }
+
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                fireworks[i].step();
+                fireworks[i].draw();
+                if (fireworks[i].life <= 0) fireworks.splice(i, 1);
+            }
+
+            for (let i = balloons.length - 1; i >= 0; i--) {
+                balloons[i].step();
+                balloons[i].draw();
+                if (balloons[i].life <= 0) balloons.splice(i, 1);
+            }
+
+            if (!animationComplete && letters.every(letter => letter.phase === 'done')) {
+                animationComplete = true;
+                mainHeart.classList.add('show');
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        // Floating hearts background effect
         function createHeart() {
             const heart = document.createElement('div');
             heart.className = 'heart';
-            heart.innerHTML = '💖';
-            heart.style.left = Math.random() * 100 + '%';
-            heart.style.animationDelay = Math.random() * 6 + 's';
-            heart.style.animationDuration = (6 + Math.random() * 4) + 's';
-            document.getElementById('hearts').appendChild(heart);
-            
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.fontSize = (10 + Math.random() * 20) + 'px';
+            heartsContainer.appendChild(heart);
             setTimeout(() => {
-                heart.remove();
-            }, 10000);
+                heartsContainer.removeChild(heart);
+            }, 6000);
         }
-        
-        // Create hearts periodically
-        setInterval(createHeart, 3000);
-        
-        // Event listeners
-        canvas.addEventListener('click', (e) => {
-            if (!animationComplete) {
-                reset();
-            }
-        });
-        
-        document.getElementById('mainHeart').addEventListener('click', (e) => {
-            e.stopPropagation();
-            const card = document.getElementById('card');
-            card.classList.add('show');
-            // Add this new code
-            setTimeout(() => {
-                document.querySelectorAll('.photo-container').forEach(photo => {
-                    photo.classList.add('show');
-                });
-            }, 500);
+
+        setInterval(createHeart, 300);
+
+        window.addEventListener('resize', init);
+
+        document.body.addEventListener('click', () => {
+            animationComplete = false;
+            mainHeart.classList.remove('show');
+            fireworks.length = 0;
+            balloons.length = 0;
+            init();
         });
 
-        document.getElementById('closeBtn').addEventListener('click', (e) => {
+        mainHeart.addEventListener('click', (e) => {
             e.stopPropagation();
-            document.querySelectorAll('.photo-container').forEach(photo => {
-                photo.classList.remove('show');
-            });
-            document.getElementById('card').classList.remove('show');
+            postcard.classList.add('show');
         });
-        
-        window.addEventListener('resize', init);
-        
-        // Initialize and start
+
+        closeBtn.addEventListener('click', () => {
+            postcard.classList.remove('show');
+        });
+
         init();
-        loop();
-        
-        // Create initial hearts
-        for (let i = 0; i < 3; i++) {
-            setTimeout(createHeart, i * 1000);
-        }
+        step();
     </script>
 </body>
 </html>
