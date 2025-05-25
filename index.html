@@ -347,36 +347,39 @@
 
         let animationComplete = false;
 
-        function init() {
-            w = window.innerWidth;
-            h = window.innerHeight;
-            hw = w / 2;
-            hh = h / 2;
-            canvas.width = w;
-            canvas.height = h;
+function init() {
+    w = window.innerWidth;
+    h = window.innerHeight;
+    hw = w / 2;
+    hh = h / 2;
+    canvas.width = w;
+    canvas.height = h;
 
-            calc.totalWidth = 0;
-            opts.strings.forEach(str => {
-                calc.totalWidth += (str.length - 1) * opts.charSpacing + opts.charSize;
-            });
+    calc.totalWidth = 0;
+    opts.strings.forEach(str => {
+        calc.totalWidth += (str.length - 1) * opts.charSpacing + opts.charSize;
+    });
 
-            letters.length = 0;
-            let currentX = hw - calc.totalWidth / 2;
+    letters.length = 0;
 
-            opts.strings.forEach(str => {
-                for (let i = 0; i < str.length; i++) {
-                    let char = str.charAt(i);
-                    letters.push(new Letter(char, currentX + i * opts.charSpacing + opts.charSize / 2, hh));
-                }
-                currentX += (str.length - 1) * opts.charSpacing + opts.charSize + 20; // 20 for space between words
-            });
+    let offset = window.innerWidth < 500 ? 30 : 0; // shift right on small screens
+    let currentX = hw - calc.totalWidth / 2 + offset;
 
-            fireworks.length = 0;
-            balloons.length = 0;
-            animationComplete = false;
-            mainHeart.classList.remove('show');
-            postcard.classList.remove('show');
+    opts.strings.forEach(str => {
+        for (let i = 0; i < str.length; i++) {
+            let char = str.charAt(i);
+            letters.push(new Letter(char, currentX + i * opts.charSpacing + opts.charSize / 2, hh));
         }
+        currentX += (str.length - 1) * opts.charSpacing + opts.charSize + 20; // 20 for space between words
+    });
+
+    fireworks.length = 0;
+    balloons.length = 0;
+    animationComplete = false;
+    mainHeart.classList.remove('show');
+    postcard.classList.remove('show');
+}
+
 
         function step() {
             ctx.clearRect(0, 0, w, h);
